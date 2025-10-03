@@ -5,12 +5,14 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
+	"qonto/internal/http"
 	"qonto/internal/sqlite"
 )
 
 type Config struct {
 	LogLevel int `envconfig:"LOG_LEVEL" default:"-4"`
 	Database sqlite.Config
+	HTTP     http.Config
 }
 
 func Load() (Config, error) {
