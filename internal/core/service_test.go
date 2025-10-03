@@ -58,6 +58,7 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 
 						expectedTransfers := []core.Transfer{
 							{
+								BankAccountID:    1, // bank_account_id set by service
 								CounterpartyName: "Bip Bip",
 								CounterpartyIBAN: "EE383680981021245685",
 								CounterpartyBIC:  "CRLYFRPPTOU",
@@ -66,6 +67,7 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 								Description:      "Test transfer",
 							},
 							{
+								BankAccountID:    1, // bank_account_id set by service
 								CounterpartyName: "Bugs Bunny",
 								CounterpartyIBAN: "FR0010009380540930414023042",
 								CounterpartyBIC:  "RNJZNTMC",

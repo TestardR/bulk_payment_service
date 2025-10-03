@@ -33,7 +33,13 @@ func (s Service) ProcessBulkTransfer(ctx context.Context, bulkTransfer BulkTrans
 			return err
 		}
 
-		return r.AddTransfers(ctx, bulkTransfer.Transfers)
+		transfers := make([]Transfer, len(bulkTransfer.Transfers))
+		for i, transfer := range bulkTransfer.Transfers {
+			transfer.BankAccountID = account.ID
+			transfers[i] = transfer
+		}
+
+		return r.AddTransfers(ctx, transfers)
 	}
 
 	return s.accountRepository.Atomic(ctx, transactionCallback)

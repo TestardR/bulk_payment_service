@@ -4,12 +4,16 @@ go 1.24.6
 
 tool go.uber.org/mock/mockgen
 
-require github.com/stretchr/testify v1.11.1
+require (
+	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/mattn/go-sqlite3 v1.14.32
+	github.com/stretchr/testify v1.11.1
+	go.uber.org/mock v0.6.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	go.uber.org/mock v0.6.0 // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect

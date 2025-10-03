@@ -13,3 +13,7 @@ lint:
 .PHONY: unit_test
 unit_test:
 	go test -parallel 6 -race -count=1 -coverpkg=./... -coverprofile=unit_coverage.out -v `go list ./... | grep -v /test/`
+
+.PHONY: integration_test
+integration_test:
+	go test -count=1 -v --tags=integration -coverpkg=./... -coverprofile=int_coverage.out ./test/...

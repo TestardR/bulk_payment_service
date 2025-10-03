@@ -23,6 +23,7 @@ func (a *Account) Debit(amount int64) error {
 
 type Transfer struct {
 	ID               int64
+	BankAccountID    int64
 	CounterpartyName string
 	CounterpartyIBAN string
 	CounterpartyBIC  string
