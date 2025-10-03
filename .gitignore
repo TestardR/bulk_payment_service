@@ -4,3 +4,4 @@ artifacts
 .tool-versions
 unit_coverage.out
 int_coverage.out
+core.test

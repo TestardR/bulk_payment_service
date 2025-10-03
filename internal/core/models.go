@@ -16,6 +16,7 @@ func (a *Account) Debit(amount int64) error {
 	if !a.HasSufficientFunds(amount) {
 		return ErrInsufficientFunds
 	}
+
 	a.BalanceCents -= amount
 	return nil
 }
@@ -34,4 +35,13 @@ type BulkTransfer struct {
 	OrganizationBIC  string
 	OrganizationIBAN string
 	Transfers        []Transfer
+}
+
+func (bt BulkTransfer) TotalAmount() int64 {
+	var total int64
+	for _, t := range bt.Transfers {
+		total += t.AmountCents
+	}
+
+	return total
 }
