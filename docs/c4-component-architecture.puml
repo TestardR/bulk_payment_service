@@ -1,0 +1,44 @@
+@startuml Hexagonal Architecture - Bulk Transfer Service
+
+!define LIGHTBLUE #E3F2FD
+!define LIGHTYELLOW #FFF9C4
+!define LIGHTPURPLE #F3E5F5
+
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+
+package "HTTP Layer (Adapter)\ninternal/http/" LIGHTBLUE {
+  [Handler] as handler
+
+}
+
+package "Core Layer\ninternal/core/\n(Domain + Application)" LIGHTYELLOW {
+  
+  package "Application Service" {
+    [BulkTransferService] as service
+
+  }
+  
+  package "Domain Models" {
+    [Account\nTransfer\nBulkTransfer] as models
+
+  }
+  
+  interface "AccountRepository" as repo_port
+
+}
+
+package "Infrastructure Layer (Adapter)\ninternal/sqlite/" LIGHTPURPLE {
+  [SQLite AccountStore] as sqlite
+  
+  database "SQLite DB" as db
+}
+
+handler --> service : uses
+service --> models : uses
+service --> repo_port : depends on
+sqlite ..|> repo_port : implements
+sqlite --> db : reads/writes
+
+@enduml
+

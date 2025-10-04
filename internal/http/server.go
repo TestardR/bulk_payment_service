@@ -3,14 +3,25 @@ package http
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
-	"time"
 )
 
 type Logger interface {
 	InfoContext(ctx context.Context, msg string, args ...any)
 	ErrorContext(ctx context.Context, msg string, args ...any)
+}
+
+func loggingMiddleware(logger Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.InfoContext(
+			r.Context(),
+			"request",
+			"method", r.Method,
+			"path", r.URL.Path,
+		)
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 type Server struct {
@@ -30,9 +41,11 @@ func NewServer(
 
 	mux.HandleFunc("POST /transfers/bulk", bulkTransferHandler.PostTransfers)
 
+	handler := loggingMiddleware(logger, mux)
+
 	httpServer := &http.Server{
 		Addr:         config.Address,
-		Handler:      mux,
+		Handler:      handler,
 		ReadTimeout:  config.Timeout,
 		WriteTimeout: config.Timeout,
 	}
@@ -45,23 +58,13 @@ func NewServer(
 }
 
 func (s *Server) Start(ctx context.Context) error {
-	s.logger.InfoContext(ctx, "Starting HTTP server", "port", s.httpServer.Addr)
+	s.logger.InfoContext(ctx, "Starting HTTP server", "address", s.httpServer.Addr)
 
 	go func() {
-		<-ctx.Done()
-		s.logger.InfoContext(ctx, "Shutting down HTTP server")
-
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-
-		if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-			s.logger.ErrorContext(ctx, "Error shutting down HTTP server", "error", err)
+		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			s.logger.ErrorContext(ctx, "HTTP server error", "error", err)
 		}
 	}()
-
-	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("failed to start HTTP server: %w", err)
-	}
 
 	return nil
 }

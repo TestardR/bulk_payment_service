@@ -1,0 +1,70 @@
+@startuml Bulk Transfer - Successful Flow
+
+actor Client
+participant "HTTP Handler" as handler
+participant "Service" as service
+participant "Domain\nAccount" as account
+participant "Repository\n(Port)" as repo
+database "SQLite\nAccountStore" as db
+
+Client -> handler: POST /transfers/bulk\n{organization_iban, credit_transfers[]}
+
+activate handler
+handler -> handler: Validate request\n(required fields, EUR, gt=0)
+handler -> handler: Convert DTO → Domain
+
+handler -> service: ProcessBulkTransfer(bulkTransfer)
+activate service
+
+service -> repo: Atomic(callback)
+activate repo
+repo -> db: BEGIN IMMEDIATE
+note right: Acquires write lock immediately\nPrevents race conditions
+
+service -> repo: GetAccountByID(iban, bic)
+repo -> db: SELECT * FROM bank_accounts\nWHERE iban=? AND bic=?
+db --> repo: Account{id, balance, ...}
+repo --> service: Account
+
+service -> service: Calculate total amount\n(sum of all transfers)
+
+service -> account: HasSufficientFunds(total)
+activate account
+account --> service: true
+deactivate account
+
+alt Insufficient Funds
+  service --> handler: ErrInsufficientFunds
+  handler --> Client: 422 Unprocessable Entity
+else Sufficient Funds
+  
+  service -> account: Debit(total)
+  activate account
+  account -> account: balance -= total
+  account --> service: updated Account
+  deactivate account
+  
+  service -> repo: UpdateBalance(account)
+  repo -> db: UPDATE bank_accounts\nSET balance_cents = ?\nWHERE id = ?
+  
+  service -> repo: AddTransfers(transfers[])
+  
+  loop For each batch of 100 transfers
+    repo -> db: INSERT INTO transactions\n(counterparty_name, ...)\nVALUES (?, ...), (?, ...), ...
+    note right: Bulk insert with batching\nto avoid 999 param limit
+  end
+  
+  repo -> db: COMMIT
+  note right: Transaction committed\nBalance + transfers\natomically updated
+  
+  deactivate repo
+  
+  service --> handler: nil (success)
+  deactivate service
+  
+  handler --> Client: 201 Created
+  deactivate handler
+end
+
+@enduml
+

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"qonto/config"
 	"qonto/internal/core"
@@ -25,7 +26,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.Level(cfg.LogLevel),
 	}))
 	slog.SetDefault(logger)
@@ -47,12 +48,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	logger.InfoContext(ctx, "Application started successfully")
+
 	<-stop
+	logger.InfoContext(ctx, "Received shutdown signal")
 
-	logger.InfoContext(ctx, "Shutting down...")
+	logger.InfoContext(ctx, "Shutting down gracefully...")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	if err = httpServer.Stop(ctx); err != nil {
+	if err = httpServer.Stop(shutdownCtx); err != nil {
 		logger.ErrorContext(ctx, "Error stopping HTTP server", "error", err)
+	}
+
+	if err = dbClient.Close(); err != nil {
+		logger.ErrorContext(ctx, "Error closing database", "error", err)
 	}
 
 	logger.InfoContext(ctx, "Application shutdown complete")
