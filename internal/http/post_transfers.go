@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"qonto/internal/core"
 )
 
@@ -18,12 +20,14 @@ type BulkTransferProcessor interface {
 type Handler struct {
 	bulkTransferProcessor BulkTransferProcessor
 	logger                Logger
+	validator             *validator.Validate
 }
 
 func NewHandler(bulkTransferProcessor BulkTransferProcessor, logger Logger) Handler {
 	return Handler{
 		bulkTransferProcessor: bulkTransferProcessor,
 		logger:                logger,
+		validator:             validator.New(),
 	}
 }
 
@@ -33,6 +37,11 @@ func (h Handler) PostTransfers(w http.ResponseWriter, r *http.Request) {
 	var req BulkTransferRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.validator.Struct(&req); err != nil {
+		http.Error(w, "Validation failed: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 

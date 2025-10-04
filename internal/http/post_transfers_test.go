@@ -126,6 +126,26 @@ func TestHandler_PostTransfers(t *testing.T) {
 			expectedBodyPart: "Failed to process bulk transfer",
 		},
 		{
+			name: "validation_error_returns_400",
+			requestBody: BulkTransferRequest{
+				OrganizationBIC:  "TESTBIC",
+				OrganizationIBAN: "", // Empty required field
+				CreditTransfers: []CreditTransfer{
+					{
+						Amount:           "100.00",
+						Currency:         "EUR",
+						CounterpartyName: "Test",
+						CounterpartyBIC:  "BIC",
+						CounterpartyIBAN: "IBAN",
+						Description:      "Test",
+					},
+				},
+			},
+			setupMock:        func(mock *MockBulkTransferProcessor) {},
+			expectedStatus:   http.StatusBadRequest,
+			expectedBodyPart: "Validation failed",
+		},
+		{
 			name: "invalid_amount_format_returns_400",
 			requestBody: BulkTransferRequest{
 				OrganizationBIC:  "TESTBIC",

@@ -9,18 +9,18 @@ import (
 )
 
 type BulkTransferRequest struct {
-	OrganizationBIC  string           `json:"organization_bic"`
-	OrganizationIBAN string           `json:"organization_iban"`
-	CreditTransfers  []CreditTransfer `json:"credit_transfers"`
+	OrganizationBIC  string           `json:"organization_bic" validate:"required"`
+	OrganizationIBAN string           `json:"organization_iban" validate:"required"`
+	CreditTransfers  []CreditTransfer `json:"credit_transfers" validate:"required,min=1,dive"`
 }
 
 type CreditTransfer struct {
-	Amount           string `json:"amount"`
-	Currency         string `json:"currency"`
-	CounterpartyName string `json:"counterparty_name"`
-	CounterpartyBIC  string `json:"counterparty_bic"`
-	CounterpartyIBAN string `json:"counterparty_iban"`
-	Description      string `json:"description"`
+	Amount           string `json:"amount" validate:"required,gt=0"`
+	Currency         string `json:"currency" validate:"required,eq=EUR"`
+	CounterpartyName string `json:"counterparty_name" validate:"required"`
+	CounterpartyBIC  string `json:"counterparty_bic" validate:"required"`
+	CounterpartyIBAN string `json:"counterparty_iban" validate:"required"`
+	Description      string `json:"description" validate:"required"`
 }
 
 func ParseAmountToCents(amount string) (int64, error) {
