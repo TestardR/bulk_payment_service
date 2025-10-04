@@ -20,7 +20,7 @@ func NewAccountStore(db *sql.DB) AccountStore {
 	}
 }
 
-func (s AccountStore) GetAccountByID(ctx context.Context, IBAN string, BIC string) (core.Account, error) {
+func (s AccountStore) GetAccountByID(ctx context.Context, iban string, bic string) (core.Account, error) {
 	if s.tx == nil {
 		return core.Account{}, errors.New("GetAccountByID must be called within Atomic transaction")
 	}
@@ -32,7 +32,7 @@ func (s AccountStore) GetAccountByID(ctx context.Context, IBAN string, BIC strin
 		`
 
 	var account core.Account
-	err := s.tx.QueryRowContext(ctx, query, IBAN, BIC).Scan(
+	err := s.tx.QueryRowContext(ctx, query, iban, bic).Scan(
 		&account.ID,
 		&account.OrganizationName,
 		&account.BalanceCents,
@@ -168,7 +168,7 @@ func (s AccountStore) Atomic(ctx context.Context, cb func(core.AccountRepository
 
 	if err = cb(txStore); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
-			return fmt.Errorf("transaction error: %w, rollback error: %v", err, rbErr)
+			return fmt.Errorf("transaction error: %w, rollback error: %w", err, rbErr)
 		}
 		return err
 	}

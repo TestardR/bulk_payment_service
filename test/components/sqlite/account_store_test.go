@@ -205,9 +205,6 @@ func TestAccountStore_AddTransfers(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			count := suite.CountTransactions(t, accountID)
-			require.Equal(t, tt.transferCount, count)
-
 			dbTransfers := suite.GetTransactions(t, accountID)
 			require.Len(t, dbTransfers, tt.transferCount)
 

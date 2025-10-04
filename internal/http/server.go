@@ -6,19 +6,22 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	"qonto/internal/core"
 )
+
+type Logger interface {
+	InfoContext(ctx context.Context, msg string, args ...any)
+	ErrorContext(ctx context.Context, msg string, args ...any)
+}
 
 type Server struct {
 	httpServer          *http.Server
 	bulkTransferHandler Handler
-	logger              core.Logger
+	logger              Logger
 }
 
 func NewServer(
 	bulkTransferProcessor BulkTransferProcessor,
-	logger core.Logger,
+	logger Logger,
 	config Config,
 ) *Server {
 	bulkTransferHandler := NewHandler(bulkTransferProcessor, logger)

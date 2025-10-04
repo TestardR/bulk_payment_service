@@ -17,10 +17,10 @@ type BulkTransferProcessor interface {
 
 type Handler struct {
 	bulkTransferProcessor BulkTransferProcessor
-	logger                core.Logger
+	logger                Logger
 }
 
-func NewHandler(bulkTransferProcessor BulkTransferProcessor, logger core.Logger) Handler {
+func NewHandler(bulkTransferProcessor BulkTransferProcessor, logger Logger) Handler {
 	return Handler{
 		bulkTransferProcessor: bulkTransferProcessor,
 		logger:                logger,

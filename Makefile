@@ -1,7 +1,16 @@
 GOLANGCI_LINT_VERSION ?= v1.64.6
 OSNAME ?= $(shell go env GOOS)
 ARCH ?= $(shell go env GOARCH)
+ARTIFACTS_DIR := ./artifacts
 
+.PHONY: build
+build:
+	CGO_ENABLED=0 \
+	GOOS=linux GOARCH=amd64 \
+	go build \
+		-ldflags="-s -w" \
+		-o $(ARTIFACTS_DIR)/svc \
+		./cmd/main.go
 .PHONY: mockgen
 mockgen:
 	go generate ./...
