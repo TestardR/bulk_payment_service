@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"qonto/internal/core"
+	"payment/internal/core"
 )
 
 func TestHandler_PostTransfers(t *testing.T) {

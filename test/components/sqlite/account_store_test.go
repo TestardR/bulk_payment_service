@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"qonto/internal/core"
-	"qonto/internal/sqlite"
+	"payment/internal/core"
+	"payment/internal/sqlite"
 )
 
 func TestAccountStore_GetAccountByID(t *testing.T) {

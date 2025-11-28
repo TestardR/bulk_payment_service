@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"qonto/internal/sqlite"
+	"payment/internal/sqlite"
 )
 
 type TestSuite struct {

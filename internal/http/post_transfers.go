@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	"qonto/internal/core"
+	"payment/internal/core"
 )
 
 //go:generate go tool go.uber.org/mock/mockgen -source=post_transfers.go -destination=service_mock.go -package=http

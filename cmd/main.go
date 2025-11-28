@@ -8,10 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"qonto/config"
-	"qonto/internal/core"
-	"qonto/internal/http"
-	"qonto/internal/sqlite"
+	"payment/config"
+	"payment/internal/core"
+	"payment/internal/http"
+	"payment/internal/sqlite"
 )
 
 func main() {

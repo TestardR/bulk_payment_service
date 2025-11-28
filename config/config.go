@@ -5,8 +5,8 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
-	"qonto/internal/http"
-	"qonto/internal/sqlite"
+	"payment/internal/http"
+	"payment/internal/sqlite"
 )
 
 type Config struct {

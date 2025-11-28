@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"qonto/internal/core"
+	"payment/internal/core"
 )
 
 type AccountStore struct {

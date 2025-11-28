@@ -1,11 +1,11 @@
 # Interview exercise - Backend Banking
 
-At Qonto, we have a wide variety of customers. Some of them are big organizations that need to perform a large number of transfers. For example, paying the salaries of hundreds of employees at the end of the month.
+We have a wide variety of customers. Some of them are big organizations that need to perform a large number of transfers. For example, paying the salaries of hundreds of employees at the end of the month.
 
 Performing those transfers one by one would be painful and time consuming for our customers, and for that reason we allow them to perform transfers _in bulk_.
 
-Your mission, should you choose to accept it, is to write a web service to receive bulk transfer requests from a single Qonto account and:
-1. Verify the validity of the request: whether the Qonto customer has enough funds for all the transfers in the request. If the customer does not have enough funds, the entire request should be denied;
+Your mission, should you choose to accept it, is to write a web service to receive bulk transfer requests from a single account and:
+1. Verify the validity of the request: whether the customer has enough funds for all the transfers in the request. If the customer does not have enough funds, the entire request should be denied;
 2. If the request must be denied, return a 422 HTTP response;
 3. Otherwise, add the transfers to the database, update the customer's balance, and return a 201 HTTP response.
 
@@ -33,7 +33,7 @@ That said, if you'd like to take more time to improve, or "finish" your solution
 
 You can find the following files to help you on your way:
 - `sample1.json`, `sample2.json`: the bulk transfer requests you receive,
-- `qonto_accounts.sqlite`: a sample SQLite database you can use.
+- `payment_accounts.sqlite`: a sample SQLite database you can use.
 
 The bulk transfer request is a JSON document, with the contract:
 
@@ -42,7 +42,7 @@ openapi: 3.0.0
 info:
   title: Bulk Transfer API
   version: 1.0.0
-  description: API for processing bulk transfer requests in Qonto
+  description: API for processing bulk transfer requests
 paths:
   /transfers/bulk:
     post:
@@ -59,11 +59,11 @@ paths:
               properties:
                 organization_bic:
                   type: string
-                  description: The BIC of the Qonto customer's organization.
+                  description: The BIC of customer's organization.
                   example: QONTRR2X
                 organization_iban:
                   type: string
-                  description: The IBAN of the Qonto customer's organization.
+                  description: The IBAN of customer's organization.
                   example: FR7612345678901234567890123
                 credit_transfers:
                   type: array
@@ -107,11 +107,11 @@ You can use https://editor.swagger.io to visualize the OpenAPI contract.
 
 ## The bank's database
 
-You can use the provided `qonto_accounts.sqlite`. It contains the Qonto customer's account and transactions linked to them.
+You can use the provided `payment_accounts.sqlite`. It contains the customer's account and transactions linked to them.
 
 > You can also use your own database, but in this case you must provide a Dockerfile allowing us to properly run your solution, along with the means to create the necessary databases, tables, seed data, etc.
 
-The schema of the provided `qonto_accounts.sqlite` is composed of two tables described below.
+The schema of the provided `payment_accounts.sqlite` is composed of two tables described below.
 
 ### `bank_accounts`
 

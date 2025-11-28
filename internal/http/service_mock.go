@@ -11,7 +11,7 @@ package http
 
 import (
 	context "context"
-	core "qonto/internal/core"
+	core "payment/internal/core"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"

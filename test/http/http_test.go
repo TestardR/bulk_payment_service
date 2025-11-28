@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	httpHandler "qonto/internal/http"
+	httpHandler "payment/internal/http"
 )
 
 func TestBulkTransfer_E2E_HappyPath(t *testing.T) {

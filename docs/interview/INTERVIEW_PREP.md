@@ -369,7 +369,7 @@ type Config struct {
 
 **Defaults Provided:**
 - Sensible defaults for local development
-- Override with `DATABASE_PATH=/data/qonto.db ./svc`
+- Override with `DATABASE_PATH=/data/payment.db ./svc`
 
 ---
 

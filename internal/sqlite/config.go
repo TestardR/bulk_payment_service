@@ -5,7 +5,7 @@ import (
 )
 
 type Config struct {
-	DatabasePath    string        `envconfig:"DATABASE_PATH" default:"qonto_accounts.sqlite"`
+	DatabasePath    string        `envconfig:"DATABASE_PATH" default:"payment_accounts.sqlite"`
 	MaxOpenConns    int           `envconfig:"MAX_OPEN_CONNS" default:"25"`
 	MaxIdleConns    int           `envconfig:"MAX_IDLE_CONNS" default:"5"`
 	ConnMaxLifetime time.Duration `envconfig:"CONN_MAX_LIFETIME" default:"5m"`

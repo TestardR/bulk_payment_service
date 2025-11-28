@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"qonto/internal/core"
+	"payment/internal/core"
 )
 
 type BulkTransferRequest struct {

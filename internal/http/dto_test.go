@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"qonto/internal/core"
+	"payment/internal/core"
 )
 
 func TestParseAmountToCents(t *testing.T) {

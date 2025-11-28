@@ -338,7 +338,7 @@ feat(core): add service layer to orchestrate business logic
 
 3. **Query database to verify:**
    ```bash
-   sqlite3 qonto_accounts.sqlite "SELECT balance_cents FROM bank_accounts WHERE iban='FR10474608000002006107XXXXX'"
+   sqlite3 payment_accounts.sqlite "SELECT balance_cents FROM bank_accounts WHERE iban='FR10474608000002006107XXXXX'"
    ```
    > "Balance is debited"
 

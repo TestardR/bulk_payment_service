@@ -2,7 +2,7 @@
 
 ## Summary
 
-This service processes bulk money transfers for Qonto banking customers, ensuring atomic operations across balance updates and transaction records. Built with **hexagonal architecture** in Go, it provides strong ACID guarantees through SQLite's transaction isolation while maintaining comprehensive test coverage (unit, integration, and end-to-end). The implementation prioritizes **correctness and testability** over premature optimization, with clear separation between domain logic, infrastructure concerns making it straightforward to evolve toward production requirements.
+This service processes bulk money transfers for banking customers, ensuring atomic operations across balance updates and transaction records. Built with **hexagonal architecture** in Go, it provides strong ACID guarantees through SQLite's transaction isolation while maintaining comprehensive test coverage (unit, integration, and end-to-end). The implementation prioritizes **correctness and testability** over premature optimization, with clear separation between domain logic, infrastructure concerns making it straightforward to evolve toward production requirements.
 
 ---
 
@@ -129,7 +129,7 @@ make local-run
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DATABASE_PATH` | `qonto_accounts.sqlite` | SQLite database file path |
+| `DATABASE_PATH` | `payment_accounts.sqlite` | SQLite database file path |
 | `HTTP_ADDRESS` | `localhost:8080` | HTTP server address |
 | `HTTP_TIMEOUT` | `10s` | HTTP server request timeout |
 | `LOG_LEVEL` | `-4` (Info) | Log level: -4=Info, 0=Warn, 4=Error |

@@ -11,9 +11,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"qonto/internal/core"
-	"qonto/internal/http"
-	"qonto/internal/sqlite"
+	"payment/internal/core"
+	"payment/internal/http"
+	"payment/internal/sqlite"
 )
 
 type TestSuite struct {
