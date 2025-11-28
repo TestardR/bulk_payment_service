@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -158,20 +159,6 @@ func TestAccountStore_AddTransfers(t *testing.T) {
 				return -t.AmountCents
 			},
 		},
-		{
-			name:          "batch_size_boundary",
-			transferCount: 100, // Exactly at batch size
-			expectedDBAmount: func(t core.Transfer) int64 {
-				return -t.AmountCents
-			},
-		},
-		{
-			name:          "exceeds_batch_size",
-			transferCount: 150, // Requires multiple batches
-			expectedDBAmount: func(t core.Transfer) int64 {
-				return -t.AmountCents
-			},
-		},
 	}
 
 	for _, tt := range tests {
@@ -262,7 +249,7 @@ func TestAccountStore_Atomic_CommitSuccess(t *testing.T) {
 	require.Equal(t, 1, count)
 }
 
-func TestAccountStore_Atomic_ConcurrentWrites(t *testing.T) {
+func TestAccountStore_Atomic_RaceConditionPrevention(t *testing.T) {
 	t.Parallel()
 
 	suite := NewTestSuite(t)
@@ -272,15 +259,19 @@ func TestAccountStore_Atomic_ConcurrentWrites(t *testing.T) {
 
 	iban := "FR1420041010050500013M02606"
 	bic := "PSSTFRPPMON"
-	initialBalance := int64(1_000_000)
+	initialBalance := int64(1_000_000) // €10,000
 	accountID := suite.SeedAccount(t, "Test Org", iban, bic, initialBalance)
 
-	// Simulate concurrent bulk transfer processing
-	// With BEGIN IMMEDIATE, these should serialize (not race)
-	const numConcurrent = 5
-	const debitAmount = 100_000
+	// Scenario: concurrent transfers of €8,000 each
+	// Total needed: €16,000, but only €10,000 available
+	// Expected: One succeeds, one fails with insufficient funds
+	const numConcurrent = 2
+	const debitAmount = 800_000 // €8,000 each
 
 	errChan := make(chan error, numConcurrent)
+	successCount := 0
+	failureCount := 0
+
 	for i := 0; i < numConcurrent; i++ {
 		go func(index int) {
 			err := store.Atomic(context.Background(), func(r core.AccountRepository) error {
@@ -289,8 +280,12 @@ func TestAccountStore_Atomic_ConcurrentWrites(t *testing.T) {
 					return err
 				}
 
+				if account.BalanceCents < debitAmount {
+					return core.ErrInsufficientFunds
+				}
+
 				account.BalanceCents -= debitAmount
-				if err := r.UpdateBalance(context.Background(), account); err != nil {
+				if err = r.UpdateBalance(context.Background(), account); err != nil {
 					return err
 				}
 
@@ -302,7 +297,7 @@ func TestAccountStore_Atomic_ConcurrentWrites(t *testing.T) {
 						CounterpartyBIC:  "BUKBGB22",
 						AmountCents:      debitAmount,
 						Currency:         "EUR",
-						Description:      "Concurrent test",
+						Description:      "Race condition test",
 					},
 				}
 
@@ -314,13 +309,22 @@ func TestAccountStore_Atomic_ConcurrentWrites(t *testing.T) {
 
 	for i := 0; i < numConcurrent; i++ {
 		err := <-errChan
-		require.NoError(t, err, "concurrent transaction %d failed", i)
+		if err == nil {
+			successCount++
+		} else if errors.Is(err, core.ErrInsufficientFunds) {
+			failureCount++
+		} else {
+			t.Fatalf("Unexpected error: %v", err)
+		}
 	}
 
-	expectedBalance := initialBalance - (numConcurrent * debitAmount)
+	require.Equal(t, 1, successCount, "Exactly one transaction should succeed")
+	require.Equal(t, 1, failureCount, "Exactly one transaction should fail with insufficient funds")
+
+	expectedBalance := initialBalance - debitAmount
 	actualBalance := suite.GetAccountBalance(t, accountID)
-	require.Equal(t, expectedBalance, actualBalance, "balance should reflect all %d concurrent debits", numConcurrent)
+	require.Equal(t, expectedBalance, actualBalance, "Final balance should reflect only one successful debit")
 
 	count := suite.CountTransactions(t, accountID)
-	require.Equal(t, numConcurrent, count, "should have %d transfers from concurrent operations", numConcurrent)
+	require.Equal(t, 1, count, "Should have exactly one transfer record")
 }

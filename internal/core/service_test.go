@@ -1,11 +1,9 @@
-package core_test
+package core
 
 import (
 	"context"
 	"errors"
 	"testing"
-
-	"qonto/internal/core"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -16,16 +14,16 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		bulkTransfer  core.BulkTransfer
-		mockSetup     func(*core.MockAccountRepository)
+		bulkTransfer  BulkTransfer
+		mockSetup     func(*MockAccountRepository)
 		expectedError error
 	}{
 		{
 			name: "successful bulk transfer",
-			bulkTransfer: core.BulkTransfer{
+			bulkTransfer: BulkTransfer{
 				OrganizationBIC:  "OIVUSCLQXXX",
 				OrganizationIBAN: "FR10474608000002006107XXXXX",
-				Transfers: []core.Transfer{
+				Transfers: []Transfer{
 					{
 						CounterpartyName: "Bip Bip",
 						CounterpartyIBAN: "EE383680981021245685",
@@ -44,19 +42,19 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 					},
 				},
 			},
-			mockSetup: func(m *core.MockAccountRepository) {
+			mockSetup: func(m *MockAccountRepository) {
 				m.EXPECT().
 					Atomic(context.Background(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, cb func(core.AccountRepository) error) error {
+					DoAndReturn(func(ctx context.Context, cb func(AccountRepository) error) error {
 						ctrl := gomock.NewController(t)
-						mockRepo := core.NewMockAccountRepository(ctrl)
+						mockRepo := NewMockAccountRepository(ctrl)
 
-						account := core.Account{
+						account := Account{
 							ID:           1,
 							BalanceCents: 10000000,
 						}
 
-						expectedTransfers := []core.Transfer{
+						expectedTransfers := []Transfer{
 							{
 								BankAccountID:    1, // bank_account_id set by service
 								CounterpartyName: "Bip Bip",
@@ -77,7 +75,7 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 							},
 						}
 
-						expectedAccount := core.Account{
+						expectedAccount := Account{
 							ID:           1,
 							BalanceCents: 9898650, // 10000000 - 1450 - 99900
 						}
@@ -102,20 +100,20 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 		},
 		{
 			name: "empty transfer list returns nil",
-			bulkTransfer: core.BulkTransfer{
+			bulkTransfer: BulkTransfer{
 				OrganizationBIC:  "OIVUSCLQXXX",
 				OrganizationIBAN: "FR10474608000002006107XXXXX",
-				Transfers:        []core.Transfer{},
+				Transfers:        []Transfer{},
 			},
-			mockSetup:     func(m *core.MockAccountRepository) {},
+			mockSetup:     func(m *MockAccountRepository) {},
 			expectedError: nil,
 		},
 		{
 			name: "insufficient funds returns error",
-			bulkTransfer: core.BulkTransfer{
+			bulkTransfer: BulkTransfer{
 				OrganizationBIC:  "OIVUSCLQXXX",
 				OrganizationIBAN: "FR10474608000002006107XXXXX",
-				Transfers: []core.Transfer{
+				Transfers: []Transfer{
 					{
 						CounterpartyName: "Bip Bip",
 						CounterpartyIBAN: "EE383680981021245685",
@@ -126,14 +124,14 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 					},
 				},
 			},
-			mockSetup: func(m *core.MockAccountRepository) {
+			mockSetup: func(m *MockAccountRepository) {
 				m.EXPECT().
 					Atomic(context.Background(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, cb func(core.AccountRepository) error) error {
+					DoAndReturn(func(ctx context.Context, cb func(AccountRepository) error) error {
 						ctrl := gomock.NewController(t)
-						mockRepo := core.NewMockAccountRepository(ctrl)
+						mockRepo := NewMockAccountRepository(ctrl)
 
-						account := core.Account{
+						account := Account{
 							ID:           1,
 							BalanceCents: 5000,
 						}
@@ -145,14 +143,14 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 					}).
 					Times(1)
 			},
-			expectedError: core.ErrInsufficientFunds,
+			expectedError: ErrInsufficientFunds,
 		},
 		{
 			name: "account not found error propagates",
-			bulkTransfer: core.BulkTransfer{
+			bulkTransfer: BulkTransfer{
 				OrganizationBIC:  "OIVUSCLQXXX",
 				OrganizationIBAN: "FR10474608000002006107XXXXX",
-				Transfers: []core.Transfer{
+				Transfers: []Transfer{
 					{
 						CounterpartyName: "Bip Bip",
 						CounterpartyIBAN: "EE383680981021245685",
@@ -163,17 +161,17 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 					},
 				},
 			},
-			mockSetup: func(m *core.MockAccountRepository) {
+			mockSetup: func(m *MockAccountRepository) {
 				m.EXPECT().
 					Atomic(context.Background(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, cb func(core.AccountRepository) error) error {
+					DoAndReturn(func(ctx context.Context, cb func(AccountRepository) error) error {
 						ctrl := gomock.NewController(t)
-						mockRepo := core.NewMockAccountRepository(ctrl)
+						mockRepo := NewMockAccountRepository(ctrl)
 
 						accountNotFoundErr := errors.New("account not found")
 						mockRepo.EXPECT().
 							GetAccountByID(context.Background(), "FR10474608000002006107XXXXX", "OIVUSCLQXXX").
-							Return(core.Account{}, accountNotFoundErr)
+							Return(Account{}, accountNotFoundErr)
 
 						return cb(mockRepo)
 					}).
@@ -183,10 +181,10 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 		},
 		{
 			name: "update balance error propagates",
-			bulkTransfer: core.BulkTransfer{
+			bulkTransfer: BulkTransfer{
 				OrganizationBIC:  "OIVUSCLQXXX",
 				OrganizationIBAN: "FR10474608000002006107XXXXX",
-				Transfers: []core.Transfer{
+				Transfers: []Transfer{
 					{
 						CounterpartyName: "Bip Bip",
 						CounterpartyIBAN: "EE383680981021245685",
@@ -197,19 +195,19 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 					},
 				},
 			},
-			mockSetup: func(m *core.MockAccountRepository) {
+			mockSetup: func(m *MockAccountRepository) {
 				m.EXPECT().
 					Atomic(context.Background(), gomock.Any()).
-					DoAndReturn(func(ctx context.Context, cb func(core.AccountRepository) error) error {
+					DoAndReturn(func(ctx context.Context, cb func(AccountRepository) error) error {
 						ctrl := gomock.NewController(t)
-						mockRepo := core.NewMockAccountRepository(ctrl)
+						mockRepo := NewMockAccountRepository(ctrl)
 
-						account := core.Account{
+						account := Account{
 							ID:           1,
 							BalanceCents: 10000000,
 						}
 
-						expectedAccount := core.Account{
+						expectedAccount := Account{
 							ID:           1,
 							BalanceCents: 9998550,
 						}
@@ -238,12 +236,12 @@ func TestService_ProcessBulkTransfer(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockRepo := core.NewMockAccountRepository(ctrl)
+			mockRepo := NewMockAccountRepository(ctrl)
 			if tt.mockSetup != nil {
 				tt.mockSetup(mockRepo)
 			}
 
-			service := core.NewService(mockRepo)
+			service := NewService(mockRepo)
 			err := service.ProcessBulkTransfer(context.Background(), tt.bulkTransfer)
 
 			if tt.expectedError != nil {

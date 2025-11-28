@@ -82,24 +82,6 @@ func (s AccountStore) AddTransfers(ctx context.Context, transfers []core.Transfe
 		return errors.New("AddTransfers must be called within Atomic transaction")
 	}
 
-	// SQLite has a limit of 999 parameters (SQLITE_MAX_VARIABLE_NUMBER)
-	// With 7 parameters per transfer, we can insert 142 transfers at once
-	// We use 100 as a safe batch size
-	const batchSize = 100
-	for i := 0; i < len(transfers); i += batchSize {
-		end := i + batchSize
-		if end > len(transfers) {
-			end = len(transfers)
-		}
-		if err := s.addTransfers(ctx, transfers[i:end]); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s AccountStore) addTransfers(ctx context.Context, transfers []core.Transfer) error {
 	baseQuery := `
 		INSERT INTO transactions (
 			counterparty_name,

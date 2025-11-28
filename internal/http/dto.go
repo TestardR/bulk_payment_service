@@ -39,6 +39,7 @@ func ParseAmountToCents(amount string) (int64, error) {
 	}
 
 	cents := int64(floatAmount * 100)
+	// 0.1 + 0.2 != 0.3
 
 	return cents, nil
 }

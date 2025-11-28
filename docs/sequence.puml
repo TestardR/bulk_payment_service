@@ -48,11 +48,8 @@ else Sufficient Funds
   repo -> db: UPDATE bank_accounts\nSET balance_cents = ?\nWHERE id = ?
   
   service -> repo: AddTransfers(transfers[])
-  
-  loop For each batch of 100 transfers
-    repo -> db: INSERT INTO transactions\n(counterparty_name, ...)\nVALUES (?, ...), (?, ...), ...
-    note right: Bulk insert with batching\nto avoid 999 param limit
-  end
+  repo -> db: INSERT INTO transactions\n(counterparty_name, ...)\nVALUES (?, ...), (?, ...), ...
+  note right: Bulk insert with all transfers\nin single query
   
   repo -> db: COMMIT
   note right: Transaction committed\nBalance + transfers\natomically updated

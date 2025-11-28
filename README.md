@@ -87,7 +87,6 @@ Financial transactions require rigorous testing and the ability to evolve infras
 | **`BEGIN IMMEDIATE` Transactions** | SQLite always uses SERIALIZABLE isolation, but lock timing matters. BEGIN IMMEDIATE acquires a RESERVED lock at transaction start and holds it for the entire transaction duration, blocking other write transactions immediately while still allowing concurrent reads (with WAL mode). This prevents "check-then-act" race conditions. | BEGIN DEFERRED allows concurrent transactions to read stale data before acquiring write lock, enabling "check-then-act" race condition. BEGIN EXCLUSIVE would block readers unnecessarily. BEGIN IMMEDIATE serializes writers from the start, eliminating the race window entirely.                     |
 | **SQLite with WAL Mode + Busy Timeout** | WAL allows concurrent reads during writes. `_busy_timeout=30s` makes SQLite retry lock acquisition automatically instead of failing immediately with `SQLITE_BUSY`. | SQLite serializes writes globally (database-level lock). Fine for single application instance, but will not scale for multiple app servers. PostgreSQL offers row-level locking, allowing concurrent writes to different accounts, better suited for horizontal scaling with multiple service instances. |
 | **Integer Arithmetic (Cents)** | All monetary calculations use integer arithmetic in cents (e.g., €10.50 = 1050 cents). Avoids floating-point precision errors inherent in financial calculations. API strings are parsed to integers at the boundary. | Considered using decimal library (e.g., shopspring/decimal) for exact decimal arithmetic, but parsing strings to string->float->int is simpler and sufficient since we only handle 2 decimal places (cents).                                         |
-| **Bulk Insert Batching** | Inserts 100 transfers per batch to balance memory usage vs. DB round trips. | SQLite has 999 parameter limit; batching prevents crashes on large transfers.                                                                                                                                                                                                                           |
 | **Outgoing Transfers Only** | PRD specifies positive amounts in API (`"amount": "100.50"`). Service implements debits only (money leaving organization accounts). Stored as negative values in DB (`-10050` cents) per accounting conventions. Sign inversion happens at repository boundary. |
 | **Validation at Boundaries** | HTTP layer validates format/required fields, domain layer validates business rules. | Clear separation: HTTP catches malformed requests, domain catches business violations.                                                                                                                                                                                                                  |
 
@@ -102,7 +101,7 @@ Financial transactions require rigorous testing and the ability to evolve infras
 4. Fetch account by IBAN/BIC
 5. Validate business rule: `HasSufficientFunds(total)`
 6. Debit account balance
-7. Bulk insert transfers (batched in groups of 100)
+7. Bulk insert transfers
 8. **COMMIT** transaction (atomic: balance + transfers)
 9. Return 201 Created
 
@@ -191,17 +190,17 @@ This project follows a **three-tier testing approach**: unit tests, integration 
 
 This implementation prioritizes **correctness and testability** for a technical assessment. A production system would require additional considerations for **reliability, observability, and scale**.
 
-| Aspect | This Implementation | Production System |
-|--------|---------------------|-------------------|
-| **Database** | SQLite (single writer) | PostgreSQL (row-level locks) |
-| **Idempotency** | ❌ Not implemented | ✅ Required (idempotency keys) |
-| **Observability** | Basic logging | Metrics, traces, structured logs |
-| **Auth** | ❌ None | ✅ JWT + RBAC |
-| **Rate Limiting** | ❌ None | ✅ Per-organization limits |
-| **Error Handling** | Direct propagation | Retries, circuit breakers |
-| **Deployment** | Binary | Docker + Kubernetes |
-| **Migrations** | Manual schema | Automated (golang-migrate) |
-| **Security** | Basic (parameterized queries) | TLS, audit logs, encryption |
+| Aspect | This Implementation | Production System                      |
+|--------|---------------------|----------------------------------------|
+| **Database** | SQLite (single writer) | PostgreSQL (row-level locks) + indeces |
+| **Idempotency** | ❌ Not implemented | ✅ Required (idempotency keys)          |
+| **Observability** | Basic logging | Metrics, traces, structured logs       |
+| **Auth** | ❌ None | ✅ JWT + RBAC                           |
+| **Rate Limiting** | ❌ None | ✅ Per-organization limits              |
+| **Error Handling** | Direct propagation | Retries, circuit breakers              |
+| **Deployment** | Binary | Docker + Kubernetes                    |
+| **Migrations** | Manual schema | Automated (golang-migrate)             |
+| **Security** | Basic (parameterized queries) | TLS, audit logs, encryption            |
 
 **Key Principle:** This implementation demonstrates **architectural discipline** and **correctness**. Production requires additional layers for **reliability at scale**, but the **hexagonal architecture** makes these additions straightforward without rewriting core logic.
 
